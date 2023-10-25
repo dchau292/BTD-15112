@@ -1,0 +1,636 @@
+import math, copy, random
+from cmu_112_graphics import *
+
+def distance(x2, x1, y2, y1):
+    return math.sqrt(((x2-x1)**2) + ((y2-y1)**2))
+class Monkey():
+    def __init__(self, name, damage, rangeRadius):
+        self.name = name
+        self.damage = damage
+        self.range = rangeRadius
+    
+    def getName(self):
+        return self.name
+    
+    def getDamage(self):
+        return self.damage
+    
+    def getRange(self):
+        return self.range
+
+class Balloon():
+    def __init__(self, type, health, xposition, yposition, change):
+        self.type = type
+        self.health = health
+        self.Gold = health
+        self.x = xposition
+        self.moveX = True
+        self.y = yposition
+        self.moveY = False
+        self.change = change
+    
+    def check(self):
+        if self.x == 550 and self.y == 220:
+            self.moveX = False
+            self.moveY = True
+            self.change = self.change * -1
+        elif self.x == 550 and self.y == 60:
+            self.moveX = True
+            self.moveY = False
+        elif self.x == 360 and self.y == 60:
+            self.moveX = False
+            self.moveY = True
+            self.change = self.change * -1
+        elif self.x == 360 and self.y == 510:
+            self.moveX = True
+            self.moveY = False
+            self.change = self.change * -1
+        elif self.x == 180 and self.y == 510:
+            self.moveX = False
+            self.moveY = True
+        elif self.x == 180 and self.y == 340:
+            self.moveX = True
+            self.moveY = False
+            self.change = self.change * -1
+        elif self.x == 690 and self.y == 340:
+            self.moveX = False
+            self.moveY = True
+            self.change = self.change * -1
+        elif self.x == 690 and self.y == 170:
+            self.moveX = True
+            self.moveY = False
+            self.change = self.change * -1
+        elif self.x == 830 and self.y == 170:
+            self.moveX = False
+            self.moveY = True
+        elif self.x == 830 and self.y == 450:
+            self.moveX = True
+            self.moveY = False
+            self.change = self.change * -1
+        elif self.x == 490 and self.y ==450:
+            self.moveX = False
+            self.moveY = True
+            self.change = self.change * -1
+
+    def getType(self):
+        return self.type
+
+    def getGold(self):
+        return self.Gold
+
+    def getxPosition(self):
+        return self.x
+    
+    def getyPosition(self):
+        return self.y
+
+    def getMoveX(self):
+        return self.moveX
+
+    def getMoveY(self):
+        return self.moveY
+    
+    def updateXPosition(self):
+        if self.x < -20:
+            self.x += 10
+        else:
+            self.x += self.change
+    
+    def updateYPosition(self):
+        self.y += self.change
+
+    def getHealth(self):
+        return self.health
+    
+    def loseHealth(self, number):
+        self.health -= number
+    
+    def nextBalloon(self):
+        if self.health < 0:
+            return True
+        return False
+
+def appStarted(app):
+    app.start = True
+    app.win = False
+    app.Lose = False
+    app.time = 0
+    url = 'https://static.wikia.nocookie.net/b__/images/e/e2/MonkeyMeadow_No_UI.png/revision/latest?cb=20200519013103&path-prefix=bloons'
+    app.image1 = app.loadImage(url)
+    app.image2 = app.scaleImage(app.image1, 4/3)
+    app.Gold = 400
+    app.Health = 100
+    app.startingPosition = (30,220)
+    app.moveX = True
+    app.moveY = False
+    app.endLevel = False
+    app.release = True
+    redUrl = "https://static.wikia.nocookie.net/b__/images/f/f2/BTD6Red.png/revision/latest?cb=20180809060915&path-prefix=bloons"
+    app.red = app.loadImage(redUrl)
+    blueUrl = "https://static.wikia.nocookie.net/b__/images/8/83/BTD6Blue.png/revision/latest?cb=20190620020620&path-prefix=bloons"
+    app.blue = app.loadImage(blueUrl)
+    greenUrl = "https://static.wikia.nocookie.net/b__/images/4/42/BTD6Green.png/revision/latest?cb=20190620031524&path-prefix=bloons"
+    app.green = app.loadImage(greenUrl)
+    yellowUrl = "https://static.wikia.nocookie.net/b__/images/7/75/BTD6Yellow.png/revision/latest?cb=20190620020955&path-prefix=bloons"
+    app.yellow = app.loadImage(yellowUrl)
+    pinkUrl = "https://static.wikia.nocookie.net/b__/images/d/dd/BTD6Pink.png/revision/latest?cb=20180809061631&path-prefix=bloons"
+    app.pink = app.loadImage(pinkUrl)
+    blackUrl = "https://static.wikia.nocookie.net/b__/images/9/9c/BTD6Black.png/revision/latest?cb=20180809061644&path-prefix=bloons"
+    app.black = app.loadImage(blackUrl)
+    whiteUrl = "https://static.wikia.nocookie.net/b__/images/e/ee/BTD6White.png/revision/latest?cb=20180809061655&path-prefix=bloons"
+    app.white = app.loadImage(whiteUrl)
+    zebraUrl = "https://static.wikia.nocookie.net/b__/images/c/c3/BTD6Zebra.png/revision/latest?cb=20190620025232&path-prefix=bloons"
+    app.zebra = app.loadImage(zebraUrl)
+    leadUrl = "https://static.wikia.nocookie.net/b__/images/f/fd/BTD6Lead.png/revision/latest?cb=20190620031244&path-prefix=bloons"
+    app.lead = app.loadImage(leadUrl)
+    app.balloonType = {'red':10, 'blue':30, 'green':40, 'yellow':50, 'pink': 55, 
+                        'black': 60, 'white': 75, 'zebra': 80, 'lead': 150}
+    app.waveObjects = []
+    app.wave = 1
+    app.waveImage = []
+    chooseWave(app)
+    dartMonkeyUrl = "https://static.wikia.nocookie.net/b__/images/e/e2/Btd6monkey.png/revision/latest/scale-to-width-down/90?cb=20180426113758&path-prefix=bloons"
+    app.dartmonkey = app.loadImage(dartMonkeyUrl)
+    dartUrl = "https://static.wikia.nocookie.net/b__/images/d/dd/ArmorPiercingDartsUpgradeIcon.png/revision/latest?cb=20201113224051&path-prefix=bloons"
+    app.dartUrl = app.loadImage(dartUrl)
+    app.dart1 = app.scaleImage(app.dartUrl, 1/10)
+    wizardMonkeyUrl = "https://static.wikia.nocookie.net/b__/images/9/99/000-WizardMonkey.png/revision/latest/scale-to-width-down/50?cb=20190522015102&path-prefix=bloons"
+    app.wizardmonkey = app.loadImage(wizardMonkeyUrl)
+    ninjaMonkeyUrl = "https://static.wikia.nocookie.net/b__/images/3/33/BTD6_Ninja_Monkey.png/revision/latest/scale-to-width-down/70?cb=20180616150243&path-prefix=bloons"
+    app.ninjamonkey = app.loadImage(ninjaMonkeyUrl)
+    superMonkeyUrl = "https://static.wikia.nocookie.net/b__/images/9/9c/BTD6_Super_Monkey.png/revision/latest/scale-to-width-down/65?cb=20180616150409&path-prefix=bloons"
+    app.supermonkey = app.loadImage(superMonkeyUrl)
+    app.monkeyObjects = []
+    app.monkeyPictures = []
+    app.monkeyPosition = []
+    app.darts = []
+    #[ [monkey1start, monkey1end], [monkey2start, monkey2end] ]
+
+def chooseWave(app):
+    startx = 30
+    starty = 220
+    for i in range(20):
+        balloon = random.randint(0, 8)
+        if balloon == 0:
+            app.waveObjects.append(Balloon('red', app.balloonType['red'], 
+                                           startx, starty, 5))
+            app.waveImage.append(app.red)
+            startx -= 60
+        elif balloon == 1:
+            app.waveObjects.append(Balloon('blue', app.balloonType['blue'], 
+                                           startx, starty, 5))
+            app.waveImage.append(app.blue)
+            startx -= 60
+        elif balloon == 2:
+            app.waveObjects.append(Balloon('green', app.balloonType['green'], 
+                                           startx, starty, 5))
+            app.waveImage.append(app.green)
+            startx -= 60
+        elif balloon == 3:
+            app.waveObjects.append(Balloon('yellow', app.balloonType['yellow'], 
+                                           startx, starty, 5))
+            app.waveImage.append(app.yellow)
+            startx -= 60
+        elif balloon == 4:
+            app.waveObjects.append(Balloon('pink', app.balloonType['pink'], 
+                                           startx, starty, 5))
+            app.waveImage.append(app.pink)
+            startx -= 60
+        elif balloon == 5:
+            app.waveObjects.append(Balloon('black', app.balloonType['black'], 
+                                           startx, starty, 10))
+            app.waveImage.append(app.black)
+            startx -= 60
+        elif balloon == 6:
+            app.waveObjects.append(Balloon('white', app.balloonType['white'], 
+                                           startx, starty, 10))
+            app.waveImage.append(app.white)
+            startx -= 60
+        elif balloon == 7:
+            app.waveObjects.append(Balloon('zebra', app.balloonType['zebra'], 
+                                           startx, starty, 5))
+            app.waveImage.append(app.zebra)
+            startx -= 60
+        elif balloon == 8:
+            app.waveObjects.append(Balloon('lead', app.balloonType['lead'], 
+                                           startx, starty, 2.5))
+            app.waveImage.append(app.lead)
+            startx -= 60
+
+def checkDistance(balloonX, balloonY, monkeyX, monkeyY, monkeyObject):
+    radius = monkeyObject.getRange()
+    if distance(balloonX, monkeyX, balloonY, monkeyY) <= radius:
+        return True
+    return False
+
+def pop(app, balloon, damage, index):
+    balloon.loseHealth(damage)
+    if balloon.getHealth() <= 0:
+        app.waveObjects.pop(index)
+        app.waveImage.pop(index)
+        app.Gold += balloon.getGold()
+        
+def targetBalloon(app):
+    for i in range(len(app.monkeyPosition)):
+        checkSet = set()
+        monkeyX, monkeyY = app.monkeyPosition[i]
+        balloon = findClosestBalloon(app, monkeyX, monkeyY)
+        if balloon == None:
+            continue
+        balloonX =  balloon.getxPosition()
+        balloonY = balloon.getyPosition()
+        monkeyObject = app.monkeyObjects[i]
+        index = app.waveObjects.index(balloon)
+        checkSet.add(checkDistance(balloonX, balloonY, monkeyX, monkeyY, monkeyObject))
+        if len(checkSet) == 1 and (False in checkSet):
+            app.darts[i][0] = (0,0)
+            app.darts[i][1] = (0,0)
+        if checkDistance(balloonX, balloonY, monkeyX, monkeyY, monkeyObject):
+            damage = app.monkeyObjects[i].getDamage()
+            app.darts[i][0] = (monkeyX, monkeyY)
+            app.darts[i][1] = (balloonX, balloonY)
+            pop(app, balloon, damage, index)
+
+def findClosestBalloon(app, monkeyX, monkeyY):
+    if len(app.waveObjects) >= 1:
+        balloonX = app.waveObjects[0].getxPosition()
+        balloonY = app.waveObjects[0].getyPosition()
+        smallestDistance = distance(balloonX, monkeyX, balloonY, monkeyY)
+        balloon = app.waveObjects[0]
+        for i in app.waveObjects:
+            compareX = i.getxPosition()
+            compareY = i.getyPosition()
+            compareDistance = distance(compareX, monkeyX, compareY, monkeyY)
+            if compareDistance < smallestDistance:
+                balloonX = compareX
+                balloonY = compareY
+                smallestDistance = compareDistance
+                balloon = i
+        return balloon
+    else:
+        app.wave += 1
+        if app.wave < 6:
+            chooseWave(app)
+            return findClosestBalloon(app, monkeyX, monkeyY)
+        else:
+            app.win = True
+
+def legalPlacement(app, x, y, monkey):
+    if (x > 0 and x < 580) and (y > 200 and y < 270):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 510 and x < 580) and (y > 45 and y < 270):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 320 and x < 550) and (y > 45 and y < 120):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 325 and x < 385) and (y > 55 and y < 540):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 135 and x < 385) and (y > 480 and y < 550):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 145 and x < 220) and (y > 320 and y < 540):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 145 and x < 720) and (y > 335 and y < 385):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 660 and x < 720) and (y > 150 and y < 385):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 660 and x < 870) and (y > 150 and y < 230):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 790 and x < 870) and (y > 150 and y < 510):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 470 and x < 870) and (y > 430 and y < 510):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+    elif (x > 460 and x < 520) and (y > 430 and y < 650):
+        if monkey.getName() == "dart monkey":
+            app.Gold += 100
+        elif monkey.getName() == "wizard monkey":
+            app.Gold += 200
+        elif monkey.getName() == "ninja monkey":
+            app.Gold += 250
+        elif monkey.getName() == "super monkey":
+            app.Gold += 400
+        app.monkeyObjects.pop(-1)
+        app.monkeyPictures.pop(-1)
+        app.monkeyPosition.pop(-1)
+
+def exitMap(app):
+    for balloon in app.waveObjects:
+        if balloon.getyPosition() >= 650:
+            app.Health -= balloon.getHealth()
+            index = app.waveObjects.index(balloon)
+            app.waveImage.pop(index)
+            app.waveObjects.pop(index)
+
+def timerFired(app):
+    if app.Lose:
+        return
+    elif app.win:
+        return
+    elif app.start:
+        return
+    if app.Health <= 0:
+        app.Lose = True
+    # balloons = len(app.waveObjects)
+    # for x in range(balloons):
+    #     if app.waveObjects[x].getyPosition() >= 650:
+    #         app.Health -= app.waveObjects[x].getHealth()
+    #         app.waveImage.pop(x)
+    #         app.waveObjects.pop(x)
+    exitMap(app)
+    length = len(app.waveObjects)
+    for i in range(length):
+        if app.waveObjects[i].getMoveX():
+            app.waveObjects[i].updateXPosition()
+        else:
+            app.waveObjects[i].updateYPosition()
+        app.waveObjects[i].check()
+    targetBalloon(app)
+
+def mousePressed(app, event):
+    if app.Lose:
+        return
+    elif app.win:
+        return
+    elif app.start:
+        return
+    if event.x > 700 and event.x < 800 and event.y > 0 and event.y < 100:
+        if app.Gold >= 100:
+            app.Gold -= 100
+            app.monkeyObjects.append(Monkey('dart monkey', 1, 
+                                    100))
+            app.monkeyPictures.append(app.dartmonkey)
+            app.monkeyPosition.append((event.x, event.y))
+            app.darts.append([(0,0), (0,0)])
+            app.release = True
+    elif event.x > 800 and event.x < 900 and event.y > 0 and event.y < 100:
+        if app.Gold >= 200:
+            app.Gold -= 200
+            app.monkeyObjects.append(Monkey('wizard monkey', 2, 
+                                    100))
+            app.monkeyPictures.append(app.wizardmonkey)
+            app.monkeyPosition.append((event.x, event.y))
+            app.darts.append([(0,0), (0,0)])
+            app.release = True
+    elif event.x > 900 and event.x < 1000 and event.y > 0 and event.y < 100:
+        if app.Gold >= 250:
+            app.Gold -= 250
+            app.monkeyObjects.append(Monkey('ninja monkey', 4, 
+                                    100))
+            app.monkeyPictures.append(app.ninjamonkey)
+            app.monkeyPosition.append((event.x, event.y))
+            app.darts.append([(0,0), (0,0)])
+            app.release = True
+    elif event.x > 1000 and event.x < 1100 and event.y > 0 and event.y < 100:
+        if app.Gold >= 400:
+            app.Gold -= 400
+            app.monkeyObjects.append(Monkey('super monkey', 8, 
+                                    200))
+            app.monkeyPictures.append(app.supermonkey)
+            app.monkeyPosition.append((event.x, event.y))
+            app.darts.append([(0,0), (0,0)])
+            app.release = True
+    if len(app.monkeyPosition) == 0:
+        return
+    
+def mouseDragged(app, event):
+    if app.Lose:
+        return
+    elif app.win:
+        return 
+    elif app.start:
+        return
+    if len(app.monkeyPosition) == 0:
+        return
+    if app.release: 
+        app.monkeyPosition[-1] = (event.x, event.y)
+
+def mouseReleased(app, event):
+    if app.Lose:
+        return
+    elif app.win:
+        return
+    elif app.start:
+        return
+    if len(app.monkeyPosition) == 0:
+        return
+    if app.release:
+        app.monkeyPosition[-1] = (event.x, event.y)
+        legalPlacement(app, event.x, event.y, app.monkeyObjects[-1])
+
+        app.release = False
+
+def keyPressed(app, event):
+    if app.start == True:
+        if event.key == "Space":
+            app.start = False
+    if app.win == True or app.Lose == True:
+        if event.key == 'h':
+            runApp(width = 1100, height = 650)
+        elif event.key == 'r':
+            app.wave = 1
+            app.Health = 100
+            app.Gold = 400
+            app.waveObjects = []
+            app.waveImage = []
+            chooseWave(app)
+            app.monkeyObject = []
+            app.monkeyPictures = []
+            app.monkeyPosition = []
+            app.Lose = False
+            app.win = False
+            app.darts = []
+            app.time = 0
+
+def drawWave1(app, canvas):
+    for i in range(len(app.waveObjects)):
+        for j in range(len(app.waveImage)):
+            if i == j:
+                canvas.create_image(app.waveObjects[i].getxPosition(), 
+                                    app.waveObjects[j].getyPosition(), 
+                                    image=ImageTk.PhotoImage(app.waveImage[j]))
+
+def drawMonkeyArmy(app, canvas):
+    for i in range(len(app.monkeyPictures)):
+        xpos, ypos = app.monkeyPosition[i]
+        canvas.create_image(xpos, ypos, 
+                            image=ImageTk.PhotoImage(app.monkeyPictures[i]))
+
+def drawMonkeyWindow(app, canvas):
+    canvas.create_rectangle(700, 0, 1100, 100, fill = 'darkgoldenrod', 
+                            outline = 'black')
+    canvas.create_image(750, 50, image=ImageTk.PhotoImage(app.dartmonkey))
+    canvas.create_line(800, 0, 800, 100, fill = 'black')
+    canvas.create_text(750, 95, text = "100", fill = 'white', font = 'Arial 10')
+    canvas.create_image(850, 50, image=ImageTk.PhotoImage(app.wizardmonkey))
+    canvas.create_line(900, 0, 900, 100, fill = 'black')
+    canvas.create_text(850, 95, text = "200", fill = 'white', font = 'Arial 10')
+    canvas.create_image(950, 50, image=ImageTk.PhotoImage(app.ninjamonkey))
+    canvas.create_line(1000, 0, 1000, 100, fill = 'black')
+    canvas.create_text(950, 95, text = "250", fill = 'white', font = 'Arial 10')
+    canvas.create_image(1050, 50, image=ImageTk.PhotoImage(app.supermonkey))
+    canvas.create_text(1050, 95, text = "400", fill = 'white', font = 'Arial 10')
+
+def drawLoseScreen(app, canvas):
+    canvas.create_rectangle(0, 0, app.width, app.height, fill = 'black')
+    canvas.create_text(app.width/2, app.height/2, text = "Defeat!!", fill = 'red',  
+                      font = "Arial 40")
+    canvas.create_text(app.width/2, app.height * (10/17),
+                       text = "Press R to Restart or H to go Home", 
+                       fill = 'red', font = "Arial 30")
+
+def drawWinScreen(app, canvas):
+    canvas.create_rectangle(0,0, app.width, app.height, fill = 'black')
+    canvas.create_text(app.width/2, app.height/2, text = "Victory!!",
+                       fill = 'yellow', font = "Arial 40")
+    canvas.create_text(app.width/2, app.height * (10/17), 
+                       text = "Press r to Restart or H to go Home", 
+                       fill = 'yellow', font = "Arial 30")
+
+def drawStartScreen(app, canvas):
+    canvas.create_rectangle(0, 0, app.width, app.height, fill = '#7AC5CD')
+    canvas.create_text(app.width/2, app.height/2, text = "Welcome To BTD 15112",
+                       fill = 'white', font = "Arial 40")
+    canvas.create_text(app.width/2, app.height * (10/17), 
+                       text = "Get Ready To Play!!", fill = "white",
+                       font = "Arial 30")
+    canvas.create_text(app.width/2, app.height * (13/17), 
+                       text = "Press Space To Begin", fill = "white",
+                       font = "Arial 30")
+
+def drawDart(app, canvas):
+    if len(app.darts) > 0:
+        for line in app.darts:
+            startX, startY = line[0]
+            finalX, finalY = line[1]
+            canvas.create_line(startX, startY, finalX, finalY, fill = 'black')
+
+def redrawAll(app, canvas):
+    if app.Lose:
+        drawLoseScreen(app, canvas)
+    elif app.win:
+        drawWinScreen(app, canvas)
+    elif app.start:
+        drawStartScreen(app, canvas)
+    else:
+        canvas.create_image(550, 300, 
+                            image=ImageTk.PhotoImage(app.image2))
+        canvas.create_text(220, 20, 
+                        text = f"Gold: {app.Gold}", fill = "yellow",
+                        font = "Arial 20")
+        canvas.create_text(75, 20, 
+                        text = f"Health: {app.Health}", fill = "red",
+                        font = "Arial 20")
+        drawWave1(app,canvas)
+        drawMonkeyWindow(app, canvas)
+        drawMonkeyArmy(app, canvas)
+        drawDart(app, canvas)
+
+runApp(width=1100, height=650)
